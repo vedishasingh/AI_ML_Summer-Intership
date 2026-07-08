@@ -17,20 +17,17 @@ st.set_page_config(page_title="Employee Retention Prediction", layout="wide")
 
 st.title("Employee Retention Prediction using Logistic Regression")
 
-# Upload dataset
 uploaded_file = st.file_uploader("Upload HR_comma_sep.csv", type=["csv"])
 
 if uploaded_file is not None:
 
-    # Read dataset
     df = pd.read_csv(uploaded_file)
 
     st.subheader("Dataset")
     st.dataframe(df.head())
 
-    # Employees who left and retained
-    left = df[df.left == 1]
-    retained = df[df.left == 0]
+    left = df[df["left"] == 1]
+    retained = df[df["left"] == 0]
 
     col1, col2 = st.columns(2)
 
@@ -40,80 +37,86 @@ if uploaded_file is not None:
     with col2:
         st.metric("Employees Retained", retained.shape[0])
 
-    # Groupby statistics
     st.subheader("Average Values Grouped by Left")
 
-    avg = df.groupby('left')[[
-        'satisfaction_level',
-        'last_evaluation',
-        'number_project',
-        'average_montly_hours',
-        'time_spend_company'
+    avg = df.groupby("left")[[
+        "satisfaction_level",
+        "last_evaluation",
+        "number_project",
+        "average_montly_hours",
+        "time_spend_company"
     ]].mean()
 
     st.dataframe(avg)
 
-    # Salary Chart
+    # Salary chart
     st.subheader("Salary vs Employee Retention")
 
-    fig1, ax1 = plt.subplots(figsize=(6,4))
-    pd.crosstab(df.salary, df.left).plot(kind='bar', ax=ax1)
-    ax1.set_xlabel("Salary")
-    ax1.set_ylabel("Count")
+    fig1, ax1 = plt.subplots(figsize=(6, 4))
+    pd.crosstab(df["salary"], df["left"]).plot(kind="bar", ax=ax1)
     st.pyplot(fig1)
 
-    # Department Chart
+    # Department chart
     st.subheader("Department vs Employee Retention")
 
-    fig2, ax2 = plt.subplots(figsize=(10,5))
-    pd.crosstab(df.Department, df.left).plot(kind='bar', ax=ax2)
-    ax2.set_xlabel("Department")
-    ax2.set_ylabel("Count")
+    fig2, ax2 = plt.subplots(figsize=(10, 5))
+
+    # Handles both 'Department' and 'department'
+    dept_col = "Department" if "Department" in df.columns else "department"
+
+    pd.crosstab(df[dept_col], df["left"]).plot(kind="bar", ax=ax2)
     st.pyplot(fig2)
 
-    # Feature selection
-    subdf = df[['satisfaction_level',
-                'average_montly_hours',
-                'promotion_last_5years',
-                'salary']]
+    # Feature Selection
+    subdf = df[[
+        "satisfaction_level",
+        "average_montly_hours",
+        "promotion_last_5years",
+        "salary"
+    ]]
 
-    # One-hot encoding
-    salary_dummies = pd.get_dummies(subdf['salary'], prefix='salary')
+    salary_dummies = pd.get_dummies(subdf["salary"], prefix="salary")
 
-    df_with_dummies = pd.concat([subdf, salary_dummies], axis=1)
-    df_with_dummies.drop('salary', axis=1, inplace=True)
+    X = pd.concat(
+        [
+            subdf.drop("salary", axis=1),
+            salary_dummies
+        ],
+        axis=1
+    )
 
-    X = df_with_dummies
-    y = df['left']
+    y = df["left"]
 
-    # Train/Test Split
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
-        test_size=0.3,
+        test_size=0.30,
         random_state=42
     )
 
-    # Model Training
     model = LogisticRegression(max_iter=1000)
+
     model.fit(X_train, y_train)
 
     accuracy = model.score(X_test, y_test)
 
     st.subheader("Model Accuracy")
-    st.success(f"Accuracy: {accuracy:.2%}")
+    st.success(f"{accuracy*100:.2f}%")
 
-    # Prediction Section
     st.subheader("Predict Employee Retention")
 
     satisfaction = st.slider(
         "Satisfaction Level",
-        0.0, 1.0, 0.5, 0.01
+        0.0,
+        1.0,
+        0.5
     )
 
     monthly_hours = st.slider(
         "Average Monthly Hours",
-        80, 350, 200
+        80,
+        350,
+        200
     )
 
     promotion = st.selectbox(
@@ -122,22 +125,21 @@ if uploaded_file is not None:
     )
 
     salary = st.selectbox(
-        "Salary Level",
+        "Salary",
         ["low", "medium", "high"]
     )
 
-    salary_low = 1 if salary == "low" else 0
-    salary_medium = 1 if salary == "medium" else 0
-    salary_high = 1 if salary == "high" else 0
-
     input_df = pd.DataFrame({
-        'satisfaction_level': [satisfaction],
-        'average_montly_hours': [monthly_hours],
-        'promotion_last_5years': [promotion],
-        'salary_high': [salary_high],
-        'salary_low': [salary_low],
-        'salary_medium': [salary_medium]
+        "satisfaction_level": [satisfaction],
+        "average_montly_hours": [monthly_hours],
+        "promotion_last_5years": [promotion],
+        "salary_high": [1 if salary == "high" else 0],
+        "salary_low": [1 if salary == "low" else 0],
+        "salary_medium": [1 if salary == "medium" else 0]
     })
+
+    # Ensure same column order as training data
+    input_df = input_df.reindex(columns=X.columns, fill_value=0)
 
     if st.button("Predict"):
 
@@ -145,12 +147,13 @@ if uploaded_file is not None:
         probability = model.predict_proba(input_df)[0]
 
         if prediction == 1:
-            st.error("Prediction: Employee is likely to leave the company.")
+            st.error("Employee is likely to leave.")
         else:
-            st.success("Prediction: Employee is likely to stay with the company.")
+            st.success("Employee is likely to stay.")
 
         st.write(f"Probability of Staying: {probability[0]:.2%}")
         st.write(f"Probability of Leaving: {probability[1]:.2%}")
 
 else:
-    st.info("Please upload the HR_comma_sep.csv dataset to continue.")
+    st.info("Please upload HR_comma_sep.csv")
+   
