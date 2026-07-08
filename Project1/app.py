@@ -115,7 +115,19 @@ Analyze Google Play Store apps using interactive charts and insights.
 # -----------------------------
 # Load Dataset
 # -----------------------------
-df = pd.read_csv("googleplaystore_v2.csv")
+
+st.sidebar.header("📂 Upload Dataset")
+
+uploaded_file = st.sidebar.file_uploader(
+    "Choose googleplaystore_v2.csv",
+    type=["csv"]
+)
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+else:
+    st.warning("Please upload the Google Play Store dataset (.csv)")
+    st.stop()
 
 # -----------------------------
 # Dataset
