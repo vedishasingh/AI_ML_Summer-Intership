@@ -8,13 +8,19 @@ Original file is located at
 """
 
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 from PIL import Image
 
-# -----------------------------
-# Page Configuration
-# -----------------------------
+# Try to use the lightweight runtime first
+try:
+    from tflite_runtime.interpreter import Interpreter
+except ImportError:
+    # Fallback if full TensorFlow is installed
+    from tensorflow.lite.python.interpreter import Interpreter
+
+# -------------------------
+# Page Config
+# -------------------------
 st.set_page_config(
     page_title="Male & Female Image Classifier",
     page_icon="🧑",
@@ -22,41 +28,42 @@ st.set_page_config(
 )
 
 st.title("🧑 Male & Female Image Classifier")
-st.write("Upload an image to predict whether it is **Male** or **Female**.")
+st.write("Upload an image to predict whether it is Male or Female.")
 
-# -----------------------------
-# Load Model
-# -----------------------------
+# -------------------------
+# Load TFLite Model
+# -------------------------
 @st.cache_resource
-def load_my_model():
-    model = tf.keras.models.load_model("binary_image_classifier.h5")
-    return model
+def load_model():
+    interpreter = Interpreter(model_path="binary_image_classifier_float16.tflite")
+    interpreter.allocate_tensors()
+    return interpreter
 
-model = load_my_model()
+interpreter = load_model()
 
-# -----------------------------
-# Image Preprocessing Function
-# -----------------------------
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
 IMG_SIZE = (150, 150)
 
-def preprocess_image(img):
+# -------------------------
+# Image Preprocessing
+# -------------------------
+def preprocess_image(image):
+    image = image.convert("RGB")
+    image = image.resize(IMG_SIZE)
 
-    img = img.resize(IMG_SIZE)
-    img = img.convert("RGB")
+    img = np.array(image, dtype=np.float32)
+    img = img / 255.0
+    img = np.expand_dims(img, axis=0)
 
-    img_array = np.array(img)
+    return img
 
-    img_array = img_array / 255.0
-
-    img_array = np.expand_dims(img_array, axis=0)
-
-    return img_array
-
-# -----------------------------
-# File Upload
-# -----------------------------
+# -------------------------
+# Upload Image
+# -------------------------
 uploaded_file = st.file_uploader(
-    "Upload Image",
+    "Choose an image",
     type=["jpg", "jpeg", "png"]
 )
 
@@ -66,11 +73,14 @@ if uploaded_file is not None:
 
     st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    input_image = preprocess_image(image)
+    input_data = preprocess_image(image)
 
-    prediction = model.predict(input_image)
+    interpreter.set_tensor(input_details[0]["index"], input_data)
+    interpreter.invoke()
 
-    probability = prediction[0][0]
+    prediction = interpreter.get_tensor(output_details[0]["index"])
+
+    probability = float(prediction[0][0])
 
     if probability >= 0.5:
         label = "👨 Male"
@@ -79,8 +89,7 @@ if uploaded_file is not None:
         label = "👩 Female"
         confidence = (1 - probability) * 100
 
-    st.success(f"Prediction: **{label}**")
+    st.success(f"Prediction: {label}")
+    st.info(f"Confidence: {confidence:.2f}%")
 
-    st.info(f"Confidence: **{confidence:.2f}%**")
-
-    st.write("Raw Prediction Value:", float(probability))
+    
