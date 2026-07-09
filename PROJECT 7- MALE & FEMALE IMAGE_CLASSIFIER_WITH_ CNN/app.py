@@ -18,19 +18,26 @@ from tflite_runtime.interpreter import Interpreter
 # -------------------------
 st.set_page_config(
     page_title="Male & Female Image Classifier",
-    page_icon="🧑",
+    page_icon="♂️♀️",
     layout="centered"
 )
 
-st.title("🧑 Male & Female Image Classifier")
+st.title(" ♂️♀️Male & Female Image Classifier")
 st.write("Upload an image to predict whether it is Male or Female.")
+
+# -------------------------
+# Load TFLite Model
+# -------------------------
+import tensorflow as tf
 
 # -------------------------
 # Load TFLite Model
 # -------------------------
 @st.cache_resource
 def load_model():
-    interpreter = Interpreter(model_path="binary_image_classifier_float16.tflite")
+    interpreter = tf.lite.Interpreter(
+        model_path="binary_image_classifier_float16.tflite"
+    )
     interpreter.allocate_tensors()
     return interpreter
 
@@ -78,10 +85,10 @@ if uploaded_file is not None:
     probability = float(prediction[0][0])
 
     if probability >= 0.5:
-        label = "👨 Male"
+        label = "♂️ Male"
         confidence = probability * 100
     else:
-        label = "👩 Female"
+        label = "♀️ Female"
         confidence = (1 - probability) * 100
 
     st.success(f"Prediction: {label}")
