@@ -33,8 +33,10 @@ st.write(
 # ---------------------------------------
 # Load Dataset
 # ---------------------------------------
-df = pd.read_csv("canada_per_capita_income.csv")   # Change filename if required
+BASE_DIR = Path(__file__).parent
+csv_file = BASE_DIR / "canada_per_capita_income.csv"
 
+df = pd.read_csv(csv_file)
 # ---------------------------------------
 # Display Dataset
 # ---------------------------------------
