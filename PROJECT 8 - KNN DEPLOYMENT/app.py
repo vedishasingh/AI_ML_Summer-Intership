@@ -10,8 +10,13 @@ Original file is located at
 import streamlit as st
 import joblib
 import numpy as np
+import os
+import joblib
 
-model = joblib.load("knn_model.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "knn_model.pkl")
+
+model = joblib.load(MODEL_PATH)
 
 st.title("🪷 Iris Flower Classifier")
 
