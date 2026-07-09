@@ -12,12 +12,7 @@ import numpy as np
 from PIL import Image
 
 # Try to use the lightweight runtime first
-try:
-    from tflite_runtime.interpreter import Interpreter
-except ImportError:
-    # Fallback if full TensorFlow is installed
-    from tensorflow.lite.python.interpreter import Interpreter
-
+from tflite_runtime.interpreter import Interpreter
 # -------------------------
 # Page Config
 # -------------------------
