@@ -9,3 +9,5 @@ PROJECT 4- https://aimlsummer-intership-vv2hucyeitekg3btv5e2jc.streamlit.app/
 PROJECT 5- https://aimlsummer-intership-cmwzmns9kfdzvfkmjyeapy.streamlit.app/                                           
 
 PROJECT 6- https://aimlsummer-intership-bikoudjgzoswdaucdxjage.streamlit.app/
+
+PROJECT 7- https://project-7---male-female-imageclassifierwithcnn-8aoq9a8niqhm9q6.streamlit.app/
