@@ -14,4 +14,4 @@ PROJECT 7- https://project-7---male-female-imageclassifierwithcnn-8aoq9a8niqhm9q
 
 PROJECT 8- https://aimlsummer-intership-irnr6bspghhfdathb8zngv.streamlit.app/
 
-PROJECT 9- https://aimlsummer-intership-vbyv25pkoeu4g7zrmmeanu.streamlit.app/
+PROJECT 9- https://project-9--male-female-eye-detection-nxrtctapr6k3stjfzfa4ug.streamlit.app/
