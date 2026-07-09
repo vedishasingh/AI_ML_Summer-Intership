@@ -7,56 +7,25 @@ Original file is located at
     https://colab.research.google.com/drive/1Xz36WvfhQ-eGypcwHLie125rNhmPrxM7
 """
 import streamlit as st
-import tensorflow as tf
 import numpy as np
 from PIL import Image
+from tensorflow.keras.models import load_model
 
-# -------------------------
-# Page Config
-# -------------------------
+# Load trained model
+model = load_model("binary_image_classifier.keras")
+
+# Class labels
+classes = ["Female", "Male"]
+
 st.set_page_config(
-    page_title="Male & Female Image Classifier",
-    page_icon="♂️♀️",
+    page_title="Gender Classification",
+    page_icon="🧑",
     layout="centered"
 )
 
-st.title("♂️♀️ Male & Female Image Classifier")
+st.title("🧑 Gender Classification App")
 st.write("Upload an image to predict whether it is Male or Female.")
 
-# -------------------------
-# Load TFLite Model
-# -------------------------
-@st.cache_resource
-def load_model():
-    interpreter = tf.lite.Interpreter(
-        model_path="binary_image_classifier_float16.tflite"
-    )
-    interpreter.allocate_tensors()
-    return interpreter
-
-interpreter = load_model()
-
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
-
-IMG_SIZE = (150, 150)
-
-# -------------------------
-# Image Preprocessing
-# -------------------------
-def preprocess_image(image):
-    image = image.convert("RGB")
-    image = image.resize(IMG_SIZE)
-
-    img = np.array(image, dtype=np.float32)
-    img = img / 255.0
-    img = np.expand_dims(img, axis=0)
-
-    return img
-
-# -------------------------
-# Upload Image
-# -------------------------
 uploaded_file = st.file_uploader(
     "Choose an image",
     type=["jpg", "jpeg", "png"]
@@ -64,25 +33,22 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    image = Image.open(uploaded_file)
+    image = Image.open(uploaded_file).convert("RGB")
 
     st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    input_data = preprocess_image(image)
+    img = image.resize((150,150))
+    img = np.array(img)/255.0
+    img = np.expand_dims(img, axis=0)
 
-    interpreter.set_tensor(input_details[0]["index"], input_data)
-    interpreter.invoke()
+    prediction = model.predict(img)
 
-    prediction = interpreter.get_tensor(output_details[0]["index"])
-
-    probability = float(prediction[0][0])
-
-    if probability >= 0.5:
-        label = "♂️ Male"
-        confidence = probability * 100
+    if prediction[0][0] > 0.5:
+        label = classes[1]
+        confidence = prediction[0][0]
     else:
-        label = "♀️ Female"
-        confidence = (1 - probability) * 100
+        label = classes[0]
+        confidence = 1-prediction[0][0]
 
-    st.success(f"Prediction: {label}")
-    st.info(f"Confidence: {confidence:.2f}%")
+    st.success(f"Prediction : {label}")
+    st.info(f"Confidence : {confidence*100:.2f}%")
