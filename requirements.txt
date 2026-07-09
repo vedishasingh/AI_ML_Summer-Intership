@@ -7,3 +7,7 @@ plotly
 scikit-learn
 scipy
 joblib
+tensorflow-cpu
+Pillow
+h5py
+protobuf
