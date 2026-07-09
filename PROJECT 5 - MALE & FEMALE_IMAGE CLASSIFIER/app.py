@@ -9,6 +9,7 @@ Original file is located at
 
 import streamlit as st
 import numpy as np
+from pathlib import Path
 from PIL import Image
 import joblib
 
@@ -23,7 +24,11 @@ st.set_page_config(
 # -------------------------
 # Load Model
 # -------------------------
-model = joblib.load("male_female_model.pkl")
+
+BASE_DIR = Path(__file__).parent
+model_path = BASE_DIR / "male_female_model.pkl"
+
+model = joblib.load(model_path)
 
 IMG_SIZE = 64
 
